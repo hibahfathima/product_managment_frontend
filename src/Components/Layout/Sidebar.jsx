@@ -19,7 +19,7 @@ const Sidebar = ({ selectedCategoryId, setSelectedCategoryId, selectedSubCategor
             }
         };
         fetchCategories();
-    }, []);
+    }, [categories]);
 
     const toggleCategory = async (categoryId) => {
         const isCurrentlyExpanded = expandedCategories[categoryId];
