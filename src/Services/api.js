@@ -30,6 +30,10 @@ export const addProductApi = async (productData) => {
     return await comonApi("POST", `${base_url}/api/product/add`, productData)
 }
 
+export const getProductByIdApi = async (id) => {
+    return await comonApi("GET", `${base_url}/api/product/details/${id}`, "")
+}
+
 export const getCategoriesApi = async () => {
     return await comonApi("GET", `${base_url}/api/product/category/all`, "")
 }
@@ -38,7 +42,19 @@ export const getSubCategoriesApi = async (categoryId) => {
     return await comonApi("GET", `${base_url}/api/product/subcategory/${categoryId}`, "")
 }
 
-export const getProductsApi = async (subCategoryId) => {
-    return await comonApi("GET", `${base_url}/api/product/${subCategoryId}`, "")
+export const getProductsApi = async (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return await comonApi("GET", `${base_url}/api/product/all?${queryString}`, "")
 }
 
+export const updateProductApi = async (id, productData) => {
+    return await comonApi("PUT", `${base_url}/api/product/update/${id}`, productData)
+}
+
+export const toggleWishlistApi = async (productId) => {
+    return await comonApi("POST", `${base_url}/api/wishlist/toggle`, { productId })
+}
+
+export const getWishlistApi = async () => {
+    return await comonApi("GET", `${base_url}/api/wishlist/all`, "")
+}

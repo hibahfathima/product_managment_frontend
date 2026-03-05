@@ -5,6 +5,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Home from "./Components/Pages/Home";
 import ProtectedRoute from "./Components/Auth/ProtectedRoute";
+import ProductDetails from "./Components/Pages/ProductDetails";
+import Wishlist from "./Components/Pages/Wishlist";
 
 const App = () => {
   return (
@@ -13,6 +15,23 @@ const App = () => {
       <Routes>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        {/* ... (inside Routes) */}
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/product/:id"
+          element={
+            <ProtectedRoute>
+              <ProductDetails />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/"
           element={

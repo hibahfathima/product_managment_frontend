@@ -1,21 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { addProductApi, getCategoriesApi, getSubCategoriesApi } from '../../Services/api';
+import { useState, useEffect } from 'react';
+import { updateProductApi, getCategoriesApi, getSubCategoriesApi } from '../../Services/api';
+import { base_url } from '../../Services/base_url';
 import { toast } from 'react-toastify';
-import { Plus, ImagePlus, ChevronDown, X } from 'lucide-react';
+import { ImagePlus, ChevronDown, X } from 'lucide-react';
 
-const AddProduct = ({ isOpen, onClose }) => {
-    if (!isOpen) return null;
+const EditProduct = ({ isOpen, onClose, product }) => {
+    if (!isOpen || !product) return null;
 
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [variants, setVariants] = useState([{ type: '', price: '', qty: 1 }]);
-    const [subCategoryId, setSubCategoryId] = useState('');
-    const [images, setImages] = useState([]);
-    const [previews, setPreviews] = useState([]);
+    const getImageUrl = (img) => {
+        if (!img) return "";
+        if (img.startsWith('http') || img.startsWith('blob:')) return img;
+        return `${base_url}${img}`;
+    };
+
+    const [name, setName] = useState(product.name || '');
+    const [description, setDescription] = useState(product.description || '');
+    const [variants, setVariants] = useState(product.variants || [{ type: '', price: '', qty: 1 }]);
+    const [subCategoryId, setSubCategoryId] = useState(product.subCategoryId?._id || product.subCategoryId || '');
+    const [selectedCategoryId, setSelectedCategoryId] = useState(product.categoryId?._id || product.categoryId || '');
+
+    const [existingImages, setExistingImages] = useState(product.images || []);
+    const [newImages, setNewImages] = useState([]);
+    const [newPreviews, setNewPreviews] = useState([]);
 
     const [categories, setCategories] = useState([]);
     const [subCategories, setSubCategories] = useState([]);
-    const [selectedCategoryId, setSelectedCategoryId] = useState('');
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -63,11 +72,15 @@ const AddProduct = ({ isOpen, onClose }) => {
         setVariants(newVariants);
     };
 
+    const handleRemoveExistingImage = (idx) => {
+        setExistingImages(existingImages.filter((_, i) => i !== idx));
+    };
+
     const handleSubmit = async () => {
         if (!name) return toast.warning("Please enter product title");
         if (!subCategoryId) return toast.warning("Please select sub-category");
         if (variants.some(v => !v.type || !v.price)) return toast.warning("Please fill all variant details");
-        if (images.length === 0) return toast.warning("Please upload at least one image");
+        if (existingImages.length === 0 && newImages.length === 0) return toast.warning("Please upload at least one image");
 
         const formData = new FormData();
         formData.append("name", name);
@@ -75,24 +88,18 @@ const AddProduct = ({ isOpen, onClose }) => {
         formData.append("subCategoryId", subCategoryId);
         formData.append("categoryId", selectedCategoryId);
         formData.append("variants", JSON.stringify(variants.map(v => ({ ...v, price: Number(v.price) }))));
+        formData.append("existingImages", JSON.stringify(existingImages));
 
-        images.forEach((image) => {
+        newImages.forEach((image) => {
             formData.append("images", image);
         });
 
-        const result = await addProductApi(formData);
+        const result = await updateProductApi(product._id, formData);
         if (result.success) {
-            toast.success(result.message || "Product added successfully");
+            toast.success(result.message || "Product updated successfully");
             onClose();
-            setName('');
-            setDescription('');
-            setVariants([{ type: '', price: '', qty: 1 }]);
-            setSubCategoryId('');
-            setSelectedCategoryId('');
-            setImages([]);
-            setPreviews([]);
         } else {
-            toast.error(result.message || "Failed to add product");
+            toast.error(result.message || "Failed to update product");
         }
     };
 
@@ -103,7 +110,7 @@ const AddProduct = ({ isOpen, onClose }) => {
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="space-y-5 md:space-y-6">
-                    <h2 className="text-brand-navy font-black text-xl tracking-tight text-center">Add Product</h2>
+                    <h2 className="text-brand-navy font-black text-xl tracking-tight text-center">Edit Product</h2>
 
                     <div className="space-y-4">
                         {/* Title Row */}
@@ -114,13 +121,12 @@ const AddProduct = ({ isOpen, onClose }) => {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 className="w-full border border-gray-200 rounded-xl px-5 py-2.5 text-sm focus:border-brand-orange outline-none transition-all"
-                                placeholder="Enter product title"
                             />
                         </div>
 
-                        {/* Variants Section */}
+                        {/* Variants */}
                         <div className="flex flex-col sm:grid sm:grid-cols-[140px,1fr] gap-2 sm:gap-6">
-                            <label className="text-gray-400 font-semibold text-sm pt-0 sm:pt-2">Variants :</label>
+                            <label className="text-gray-400 font-semibold text-sm">Variants :</label>
                             <div className="space-y-3">
                                 {variants.map((variant, index) => (
                                     <div key={index} className="flex flex-wrap items-center gap-2 md:gap-3">
@@ -131,7 +137,6 @@ const AddProduct = ({ isOpen, onClose }) => {
                                                 value={variant.type}
                                                 onChange={(e) => handleVariantChange(index, 'type', e.target.value)}
                                                 className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-brand-orange"
-                                                placeholder="e.g. 4 GB"
                                             />
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -143,7 +148,6 @@ const AddProduct = ({ isOpen, onClose }) => {
                                                     value={variant.price}
                                                     onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
                                                     className="w-24 border border-gray-200 rounded-lg pl-6 pr-3 py-2 text-xs outline-none focus:border-brand-orange"
-                                                    placeholder="0.00"
                                                 />
                                             </div>
                                         </div>
@@ -162,10 +166,7 @@ const AddProduct = ({ isOpen, onClose }) => {
                                         )}
                                     </div>
                                 ))}
-                                <button
-                                    onClick={handleAddVariant}
-                                    className="bg-brand-navy text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-brand-navy/90 transition-all hover:cursor-pointer"
-                                >
+                                <button onClick={handleAddVariant} className="bg-brand-navy text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-brand-navy/90 transition-all hover:cursor-pointer">
                                     Add variants
                                 </button>
                             </div>
@@ -173,12 +174,12 @@ const AddProduct = ({ isOpen, onClose }) => {
 
                         {/* Category Row */}
                         <div className="flex flex-col sm:grid sm:grid-cols-[140px,1fr] items-start sm:items-center gap-2 sm:gap-6">
-                            <label className="text-gray-400 font-semibold text-sm">Sub category :</label>
+                            <label className="text-gray-400 font-semibold text-sm">Category :</label>
                             <div className="flex gap-3 w-full">
                                 <select
                                     onChange={(e) => setSelectedCategoryId(e.target.value)}
                                     value={selectedCategoryId}
-                                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:border-brand-orange outline-none transition-all hover:cursor-pointer"
+                                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:border-brand-orange outline-none hover:cursor-pointer"
                                 >
                                     <option value="">Category</option>
                                     {categories.map((cat) => (
@@ -189,7 +190,7 @@ const AddProduct = ({ isOpen, onClose }) => {
                                     onChange={(e) => setSubCategoryId(e.target.value)}
                                     value={subCategoryId}
                                     disabled={!selectedCategoryId}
-                                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:border-brand-orange outline-none transition-all hover:cursor-pointer disabled:opacity-50"
+                                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:border-brand-orange outline-none hover:cursor-pointer disabled:opacity-50"
                                 >
                                     <option value="">Sub-Category</option>
                                     {subCategories.map((sub) => (
@@ -199,7 +200,7 @@ const AddProduct = ({ isOpen, onClose }) => {
                             </div>
                         </div>
 
-                        {/* Description Row */}
+                        {/* Description */}
                         <div className="flex flex-col sm:grid sm:grid-cols-[140px,1fr] gap-2 sm:gap-6">
                             <label className="text-gray-400 font-semibold text-sm">Description :</label>
                             <textarea
@@ -207,23 +208,28 @@ const AddProduct = ({ isOpen, onClose }) => {
                                 onChange={(e) => setDescription(e.target.value)}
                                 rows="2"
                                 className="w-full border border-gray-200 rounded-xl px-5 py-2.5 text-sm focus:border-brand-orange outline-none transition-all resize-none"
-                                placeholder="Enter product description"
                             />
                         </div>
 
-                        {/* Upload Image Row */}
+                        {/* Images */}
                         <div className="flex flex-col sm:grid sm:grid-cols-[140px,1fr] items-start gap-2 sm:gap-6">
-                            <label className="text-gray-400 font-semibold text-sm">Upload image:</label>
+                            <label className="text-gray-400 font-semibold text-sm">Images:</label>
                             <div className="flex flex-wrap gap-3 pt-1">
-                                {previews.map((img, idx) => (
-                                    <div key={idx} className="relative group w-20 h-20 rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+                                {existingImages.map((img, idx) => (
+                                    <div key={`old-${idx}`} className="relative group w-20 h-20 rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+                                        <img src={getImageUrl(img)} alt="existing" className="w-full h-full object-cover" />
+                                        <button onClick={() => handleRemoveExistingImage(idx)} className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 hover:cursor-pointer"><X className="h-2.5 w-2.5" /></button>
+                                    </div>
+                                ))}
+                                {newPreviews.map((img, idx) => (
+                                    <div key={`new-${idx}`} className="relative group w-20 h-20 rounded-xl border border-blue-100 overflow-hidden shadow-sm">
                                         <img src={img} alt="preview" className="w-full h-full object-cover" />
                                         <button
                                             onClick={() => {
-                                                setImages(images.filter((_, i) => i !== idx));
-                                                setPreviews(previews.filter((_, i) => i !== idx));
+                                                setNewImages(newImages.filter((_, i) => i !== idx));
+                                                setNewPreviews(newPreviews.filter((_, i) => i !== idx));
                                             }}
-                                            className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:cursor-pointer"
+                                            className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 hover:cursor-pointer"
                                         >
                                             <X className="h-2.5 w-2.5" />
                                         </button>
@@ -237,9 +243,9 @@ const AddProduct = ({ isOpen, onClose }) => {
                                         hidden
                                         onChange={(e) => {
                                             const files = Array.from(e.target.files);
-                                            setImages([...images, ...files]);
+                                            setNewImages([...newImages, ...files]);
                                             const urls = files.map(file => URL.createObjectURL(file));
-                                            setPreviews([...previews, ...urls]);
+                                            setNewPreviews([...newPreviews, ...urls]);
                                         }}
                                     />
                                 </label>
@@ -247,18 +253,11 @@ const AddProduct = ({ isOpen, onClose }) => {
                         </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-center justify-end gap-3 pt-2">
-                        <button
-                            onClick={handleSubmit}
-                            className="bg-brand-orange text-white px-8 md:px-10 py-3 rounded-xl font-black text-xs tracking-widest hover:shadow-lg active:scale-95 transition-all uppercase hover:cursor-pointer"
-                        >
-                            Add
+                        <button onClick={handleSubmit} className="bg-brand-orange text-white px-8 md:px-10 py-3 rounded-xl font-black text-xs tracking-widest hover:shadow-lg active:scale-95 transition-all uppercase hover:cursor-pointer">
+                            Update
                         </button>
-                        <button
-                            onClick={onClose}
-                            className="bg-gray-100 text-brand-navy px-8 md:px-10 py-3 rounded-xl font-black text-xs tracking-widest hover:bg-gray-200 active:scale-95 transition-all uppercase hover:cursor-pointer"
-                        >
+                        <button onClick={onClose} className="bg-gray-100 text-brand-navy px-8 md:px-10 py-3 rounded-xl font-black text-xs tracking-widest hover:bg-gray-200 active:scale-95 transition-all uppercase hover:cursor-pointer">
                             Discard
                         </button>
                     </div>
@@ -269,4 +268,4 @@ const AddProduct = ({ isOpen, onClose }) => {
     );
 };
 
-export default AddProduct;
+export default EditProduct;

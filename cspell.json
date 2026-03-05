@@ -1,0 +1,39 @@
+{
+    "version": "0.2",
+    "language": "en",
+    "words": [
+        "productmanagment",
+        "prodify",
+        "navbar",
+        "sidebar",
+        "subcategory",
+        "subCategoryId",
+        "categoryId",
+        "lucide",
+        "toastify",
+        "nodemailer",
+        "multer",
+        "bcryptjs",
+        "jsonwebtoken",
+        "mongoose",
+        "nodemon",
+        "vite",
+        "tailwindcss",
+        "yup",
+        "axios",
+        "cors",
+        "dotenv",
+        "cspell",
+        "prereqs",
+        "wishlist",
+        "wishlisted",
+        "prev"
+    ],
+    "ignorePaths": [
+        "node_modules/**",
+        "dist/**",
+        "build/**",
+        ".prettierrc",
+        "package-lock.json"
+    ]
+}

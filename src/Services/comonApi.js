@@ -5,7 +5,7 @@ export const comonApi = async (httpRequest, url, reqData, reqHeader) => {
         url: url,
         data: reqData,
         withCredentials: true,
-        headers: reqHeader ? reqHeader : { "Content-Type": "application/json" }
+        headers: reqHeader ? reqHeader : (reqData instanceof FormData ? {} : { "Content-Type": "application/json" })
     }
     return await axios(reqConfig).then((res) => {
         return res.data

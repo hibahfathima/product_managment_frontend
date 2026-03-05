@@ -84,13 +84,13 @@ const AddSubCategory = ({ isOpen, onClose }) => {
                         <div className="flex items-center justify-center space-x-3 pt-6">
                             <button
                                 onClick={addSubCategoty}
-                                className="bg-brand-orange text-white text-[10px] font-black uppercase tracking-widest px-8 py-3 rounded-xl hover:shadow-lg transition-all active:scale-95"
+                                className="bg-brand-orange text-white text-[10px] font-black uppercase tracking-widest px-8 py-3 rounded-xl hover:shadow-lg transition-all active:scale-95 hover:cursor-pointer"
                             >
                                 Add
                             </button>
                             <button
                                 onClick={onClose}
-                                className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-gray-100 transition-all active:scale-95"
+                                className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-gray-100 transition-all active:scale-95 hover:cursor-pointer"
                             >
                                 Discard
                             </button>
